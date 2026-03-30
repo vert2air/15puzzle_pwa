@@ -3,289 +3,463 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#0f0f1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="15パズル">
+<meta name="apple-mobile-web-app-title" content="パズル">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>15パズル</title>
+<title>パズルコレクション</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f1a;
+  --surface:#1a1a2e;
+  --tile:#16213e;
+  --tile-b:#0f3460;
+  --tile-h:#1a2a50;
+  --text:#e0e0f0;
+  --muted:#7070a0;
+  --accent:#e94560;
+  --win:#14ffec;
+  --win-bg:#0d191a;
+  --win-b:#14ffec;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:none}
 
-  :root {
-    --bg: #0f0f1a;
-    --surface: #1a1a2e;
-    --tile: #16213e;
-    --tile-border: #0f3460;
-    --tile-hover: #1a2a50;
-    --correct: #0d7377;
-    --correct-bg: #0d191a;
-    --correct-border: #14ffec;
-    --text: #e0e0f0;
-    --muted: #7070a0;
-    --accent: #e94560;
-    --win: #14ffec;
-  }
+/* ===== SCREENS ===== */
+.screen{display:none;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;padding:1.5rem}
+.screen.active{display:flex}
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    overflow: hidden;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: none;
-  }
+/* ===== TITLE ===== */
+#title-screen{gap:2rem}
+.title-logo{font-size:2rem;font-weight:700;letter-spacing:.15em}
+.title-logo span{color:var(--accent)}
+.game-cards{display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:320px}
+.game-card{background:var(--surface);border:1.5px solid var(--tile-b);border-radius:14px;padding:1.1rem 1.4rem;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;justify-content:space-between;align-items:center}
+.game-card:active{transform:scale(.97)}
+.game-card:hover{border-color:var(--accent)}
+.game-card-info{display:flex;flex-direction:column;gap:3px}
+.game-card-title{font-size:1.1rem;font-weight:600}
+.game-card-desc{font-size:.75rem;color:var(--muted)}
+.game-card-best{font-size:.75rem;color:var(--win);margin-top:2px}
+.game-card-arrow{font-size:1.4rem;color:var(--muted)}
 
-  #app {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
-    padding: 1.5rem;
-  }
+/* ===== COMMON GAME HEADER ===== */
+.game-header{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:340px}
+.back-btn{background:none;border:1.5px solid var(--tile-b);border-radius:8px;color:var(--muted);font-size:.8rem;padding:.35rem .7rem;cursor:pointer;font-family:inherit}
+.back-btn:active{background:var(--tile)}
+.game-title{font-size:1rem;font-weight:600;letter-spacing:.05em}
+.stats{display:flex;gap:1.5rem}
+.stat{display:flex;flex-direction:column;align-items:center;gap:1px}
+.stat-val{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+.stat-lbl{font-size:.65rem;color:var(--muted)}
 
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--text);
-  }
-  h1 span { color: var(--accent); }
+.msg{height:1.3rem;font-size:.85rem;color:var(--muted);text-align:center}
+.win-msg{display:none;color:var(--win);font-weight:600}
+.btns{display:flex;gap:.65rem}
+button.primary{padding:.55rem 1.2rem;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:.85rem;font-family:inherit;font-weight:600;cursor:pointer;transition:transform .08s}
+button.primary:active{transform:scale(.95)}
+button.secondary{padding:.55rem 1.2rem;border-radius:8px;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--text);font-size:.85rem;font-family:inherit;cursor:pointer;transition:transform .08s}
+button.secondary:active{transform:scale(.95)}
 
-  #stats {
-    display: flex;
-    gap: 2.5rem;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .stat-val {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .stat-lbl {
-    font-size: 0.7rem;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
+/* ===== 15 PUZZLE ===== */
+#p15-board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:min(300px,calc(100vw - 3rem))}
+.p15-tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.4rem);font-weight:600;cursor:pointer;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--text);transition:transform .08s;user-select:none;-webkit-user-select:none}
+.p15-tile:active{transform:scale(.91)}
+.p15-tile.empty{background:transparent;border:1.5px dashed rgba(255,255,255,.08);cursor:default;pointer-events:none}
+.p15-tile.correct{background:var(--win-bg);border-color:var(--win-b);color:var(--win)}
 
-  #board {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 7px;
-    width: min(320px, calc(100vw - 3rem));
-  }
+/* ===== HAKOIRI ===== */
+#hakoiri-screen .stats{gap:1.2rem}
+.hk-select{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;max-width:340px}
+.hk-sel-btn{padding:.35rem .8rem;border-radius:20px;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--muted);font-size:.75rem;font-family:inherit;cursor:pointer;transition:.1s}
+.hk-sel-btn.active{border-color:var(--win);color:var(--win);background:var(--win-bg)}
+#hk-board-wrap{position:relative}
+#hk-board{position:relative;background:var(--surface);border:3px solid var(--tile-b);border-radius:6px;touch-action:none}
+.hk-piece{position:absolute;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;border:2px solid rgba(0,0,0,.3);user-select:none;-webkit-user-select:none;transition:background .15s;box-sizing:border-box}
+.hk-piece.hk-big{background:#c0392b;color:#fff;font-size:1.1em;border-color:#922b21}
+.hk-piece.hk-v{background:#2980b9;color:#fff;font-size:.8em;border-color:#1a6a9a}
+.hk-piece.hk-h{background:#27ae60;color:#fff;font-size:.8em;border-color:#1e8449}
+.hk-piece.hk-s{background:#8e44ad;color:#fff;font-size:.8em;border-color:#6c3483}
+.hk-piece.selected{filter:brightness(1.3)}
+#hk-exit{position:absolute;right:-3px;border-top:3px solid var(--bg);border-bottom:3px solid var(--bg);background:var(--bg)}
 
-  .tile {
-    aspect-ratio: 1;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(1.1rem, 5vw, 1.5rem);
-    font-weight: 600;
-    cursor: pointer;
-    border: 1.5px solid var(--tile-border);
-    background: var(--tile);
-    color: var(--text);
-    transition: transform 0.08s, background 0.15s, border-color 0.15s;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .tile:active { transform: scale(0.92); }
-  .tile.empty {
-    background: transparent;
-    border: 1.5px dashed rgba(255,255,255,0.08);
-    cursor: default;
-    pointer-events: none;
-  }
-  .tile.correct {
-    background: var(--correct-bg);
-    border-color: var(--correct-border);
-    color: var(--win);
-  }
-
-  #msg {
-    height: 1.4rem;
-    font-size: 0.9rem;
-    color: var(--muted);
-    text-align: center;
-  }
-  #win-msg {
-    display: none;
-    color: var(--win);
-    font-weight: 600;
-  }
-
-  #btns {
-    display: flex;
-    gap: 0.75rem;
-  }
-  button {
-    padding: 0.6rem 1.4rem;
-    border-radius: 8px;
-    border: 1.5px solid var(--tile-border);
-    background: var(--tile);
-    color: var(--text);
-    font-size: 0.85rem;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background 0.12s, transform 0.08s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  button:active { transform: scale(0.95); background: var(--tile-hover); }
-  button.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-    font-weight: 600;
-  }
-  button.primary:active { background: #c73050; }
-
-  #install-btn {
-    display: none;
-    margin-top: 0.25rem;
-    font-size: 0.78rem;
-    padding: 0.45rem 1rem;
-    border-color: var(--win);
-    color: var(--win);
-    background: transparent;
-  }
 </style>
 </head>
 <body>
-<div id="app">
-  <h1>15<span>パズル</span></h1>
 
-  <div id="stats">
-    <div class="stat">
-      <span class="stat-val" id="moves">0</span>
-      <span class="stat-lbl">手数</span>
+<!-- ===== TITLE ===== -->
+<div id="title-screen" class="screen active">
+  <div class="title-logo">PUZZLE<span>.</span></div>
+  <div class="game-cards">
+    <div class="game-card" onclick="startP15()">
+      <div class="game-card-info">
+        <div class="game-card-title">15パズル</div>
+        <div class="game-card-desc">1〜15を順番に並べよう</div>
+        <div class="game-card-best" id="p15-best-label"></div>
+      </div>
+      <div class="game-card-arrow">›</div>
     </div>
-    <div class="stat">
-      <span class="stat-val" id="time">0:00</span>
-      <span class="stat-lbl">時間</span>
+    <div class="game-card" onclick="startHakoiri()">
+      <div class="game-card-info">
+        <div class="game-card-title">箱入り娘</div>
+        <div class="game-card-desc">大駒を出口へ導こう</div>
+        <div class="game-card-best" id="hk-best-label"></div>
+      </div>
+      <div class="game-card-arrow">›</div>
     </div>
   </div>
+  <button id="install-btn" style="display:none;margin-top:.5rem;padding:.5rem 1.2rem;border-radius:8px;border:1.5px solid var(--win);background:transparent;color:var(--win);font-size:.8rem;font-family:inherit;cursor:pointer" onclick="installApp()">ホーム画面に追加</button>
+</div>
 
-  <div id="board"></div>
-
-  <div id="msg">
-    <span id="win-msg">🎉 クリア！ </span>
-    <span id="status"></span>
+<!-- ===== 15 PUZZLE ===== -->
+<div id="p15-screen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="goTitle()">← 戻る</button>
+    <div class="game-title">15パズル</div>
+    <div class="stats">
+      <div class="stat"><span class="stat-val" id="p15-moves">0</span><span class="stat-lbl">手数</span></div>
+      <div class="stat"><span class="stat-val" id="p15-time">0:00</span><span class="stat-lbl">時間</span></div>
+    </div>
   </div>
-
-  <div id="btns">
-    <button class="primary" onclick="shuffle()">シャッフル</button>
-    <button onclick="resetBoard()">リセット</button>
+  <div id="p15-board"></div>
+  <div class="msg"><span class="win-msg" id="p15-win">🎉 クリア！ </span><span id="p15-status"></span></div>
+  <div class="btns">
+    <button class="primary" onclick="p15Shuffle()">シャッフル</button>
+    <button class="secondary" onclick="p15Reset()">リセット</button>
   </div>
+</div>
 
-  <button id="install-btn" onclick="installApp()">ホーム画面に追加 ↓</button>
+<!-- ===== HAKOIRI ===== -->
+<div id="hakoiri-screen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" onclick="goTitle()">← 戻る</button>
+    <div class="game-title">箱入り娘</div>
+    <div class="stats">
+      <div class="stat"><span class="stat-val" id="hk-moves">0</span><span class="stat-lbl">手数</span></div>
+    </div>
+  </div>
+  <div class="hk-select" id="hk-select"></div>
+  <div id="hk-board-wrap">
+    <div id="hk-board"></div>
+    <div id="hk-exit"></div>
+  </div>
+  <div class="msg"><span class="win-msg" id="hk-win">🎉 クリア！ </span><span id="hk-status"></span></div>
+  <div class="btns">
+    <button class="primary" onclick="hkReset()">リセット</button>
+    <button class="secondary" onclick="hkUndo()">元に戻す</button>
+  </div>
 </div>
 
 <script>
-let tiles = [], moves = 0, seconds = 0, timer = null, started = false, won = false;
-const goal = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
+// ========== PWA ==========
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-btn').style.display='inline-block';});
+async function installApp(){if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')document.getElementById('install-btn').style.display='none';deferredPrompt=null;}
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// ========== UTILS ==========
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goTitle(){p15Stop();updateBestLabels();show('title-screen');}
+
+// ========== BEST SCORES ==========
+function getBest(key){return localStorage.getItem(key)||null;}
+function setBest(key,val){const b=getBest(key);if(!b||val<parseInt(b)){localStorage.setItem(key,val);return true;}return false;}
+function updateBestLabels(){
+  const b15=getBest('best-p15');
+  document.getElementById('p15-best-label').textContent=b15?`ベスト: ${b15}手`:'';
+  const bests=hkPuzzles.map((p,i)=>{const b=getBest('best-hk-'+i);return b?`${p.name}: ${b}手`:null;}).filter(Boolean);
+  document.getElementById('hk-best-label').textContent=bests.length?bests.join(' / '):'';
 }
 
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('install-btn').style.display = 'inline-block';
-});
-async function installApp() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') document.getElementById('install-btn').style.display = 'none';
-  deferredPrompt = null;
+// ========== 15 PUZZLE ==========
+let p15tiles=[],p15moves=0,p15sec=0,p15timer=null,p15started=false,p15won=false;
+const p15goal=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
+
+function startP15(){show('p15-screen');p15Shuffle();}
+
+function p15Solvable(arr){
+  let inv=0,pos=0;
+  for(let i=0;i<16;i++){if(arr[i]===0){pos=Math.floor(i/4);continue;}for(let j=i+1;j<16;j++)if(arr[j]&&arr[j]<arr[i])inv++;}
+  return((3-pos)%2===0)?inv%2===0:inv%2!==0;
 }
+function p15IsGoal(arr){return arr.every((v,i)=>v===p15goal[i]);}
 
-function isSolvable(arr) {
-  let inv = 0, pos = 0;
-  for (let i = 0; i < 16; i++) {
-    if (arr[i] === 0) { pos = Math.floor(i / 4); continue; }
-    for (let j = i + 1; j < 16; j++) { if (arr[j] && arr[j] < arr[i]) inv++; }
-  }
-  return ((3 - pos) % 2 === 0) ? inv % 2 === 0 : inv % 2 !== 0;
-}
-
-function isGoal(arr) { return arr.every((v, i) => v === goal[i]); }
-
-function shuffle() {
-  won = false;
-  document.getElementById('win-msg').style.display = 'none';
-  document.getElementById('status').textContent = '';
+function p15Shuffle(){
+  p15won=false;
+  document.getElementById('p15-win').style.display='none';
+  document.getElementById('p15-status').textContent='';
   let arr;
-  do { arr = [...goal].sort(() => Math.random() - 0.5); }
-  while (!isSolvable(arr) || isGoal(arr));
-  tiles = arr; moves = 0; seconds = 0; started = false;
-  clearInterval(timer);
-  update(); render();
+  do{arr=[...p15goal].sort(()=>Math.random()-.5);}while(!p15Solvable(arr)||p15IsGoal(arr));
+  p15tiles=arr;p15moves=0;p15sec=0;p15started=false;
+  p15Stop();p15Update();p15Render();
 }
-
-function resetBoard() {
-  won = false;
-  document.getElementById('win-msg').style.display = 'none';
-  document.getElementById('status').textContent = '';
-  tiles = [...goal]; moves = 0; seconds = 0; started = false;
-  clearInterval(timer);
-  update(); render();
+function p15Reset(){
+  p15won=false;
+  document.getElementById('p15-win').style.display='none';
+  document.getElementById('p15-status').textContent='';
+  p15tiles=[...p15goal];p15moves=0;p15sec=0;p15started=false;
+  p15Stop();p15Update();p15Render();
 }
+function p15Stop(){clearInterval(p15timer);p15timer=null;}
 
-function click(i) {
-  if (won) return;
-  const blank = tiles.indexOf(0);
-  const r1 = Math.floor(i / 4), c1 = i % 4;
-  const r2 = Math.floor(blank / 4), c2 = blank % 4;
-  if (Math.abs(r1 - r2) + Math.abs(c1 - c2) !== 1) return;
-  if (!started) {
-    started = true;
-    timer = setInterval(() => { seconds++; update(); }, 1000);
-  }
-  [tiles[i], tiles[blank]] = [tiles[blank], tiles[i]];
-  moves++;
-  update(); render();
-  if (isGoal(tiles)) {
-    won = true;
-    clearInterval(timer);
-    document.getElementById('win-msg').style.display = 'inline';
-    document.getElementById('status').textContent = `${moves}手 / ${fmt(seconds)}`;
+function p15Click(i){
+  if(p15won)return;
+  const blank=p15tiles.indexOf(0);
+  const r1=Math.floor(i/4),c1=i%4,r2=Math.floor(blank/4),c2=blank%4;
+  if(Math.abs(r1-r2)+Math.abs(c1-c2)!==1)return;
+  if(!p15started){p15started=true;p15timer=setInterval(()=>{p15sec++;p15Update();},1000);}
+  [p15tiles[i],p15tiles[blank]]=[p15tiles[blank],p15tiles[i]];
+  p15moves++;p15Update();p15Render();
+  if(p15IsGoal(p15tiles)){
+    p15won=true;p15Stop();
+    document.getElementById('p15-win').style.display='inline';
+    const isNew=setBest('best-p15',p15moves);
+    document.getElementById('p15-status').textContent=`${p15moves}手 / ${fmt(p15sec)}${isNew?' ★ベスト更新！':''}`;
   }
 }
-
-function fmt(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
-function update() {
-  document.getElementById('moves').textContent = moves;
-  document.getElementById('time').textContent = fmt(seconds);
+function p15Update(){
+  document.getElementById('p15-moves').textContent=p15moves;
+  document.getElementById('p15-time').textContent=fmt(p15sec);
 }
-
-function render() {
-  const board = document.getElementById('board');
-  board.innerHTML = '';
-  tiles.forEach((v, i) => {
-    const d = document.createElement('div');
-    d.className = 'tile' + (v === 0 ? ' empty' : '') + (v !== 0 && v === goal[i] ? ' correct' : '');
-    if (v !== 0) d.textContent = v;
-    if (v !== 0) d.onclick = () => click(i);
+function p15Render(){
+  const board=document.getElementById('p15-board');
+  board.innerHTML='';
+  p15tiles.forEach((v,i)=>{
+    const d=document.createElement('div');
+    d.className='p15-tile'+(v===0?' empty':'')+(v!==0&&v===p15goal[i]?' correct':'');
+    if(v!==0)d.textContent=v;
+    if(v!==0)d.onclick=()=>p15Click(i);
     board.appendChild(d);
   });
 }
 
-shuffle();
+// ========== HAKOIRI MUSUME ==========
+// Board: 4 cols x 5 rows  (col=x, row=y)
+// Pieces: {id, type:'big'|'v'|'h'|'s', x, y, w, h, label}
+// Goal: big piece at x=1, y=3 (row 3-4), exit at right side col4 y=3..4
+
+const hkPuzzles = [
+  {
+    name:'標準',
+    // Classic Hakoiri layout
+    pieces:[
+      {id:0,type:'big', x:1,y:0,w:2,h:2,label:'娘'},
+      {id:1,type:'v',   x:0,y:0,w:1,h:2,label:''},
+      {id:2,type:'v',   x:3,y:0,w:1,h:2,label:''},
+      {id:3,type:'v',   x:0,y:2,w:1,h:2,label:''},
+      {id:4,type:'v',   x:3,y:2,w:1,h:2,label:''},
+      {id:5,type:'h',   x:1,y:2,w:2,h:1,label:''},
+      {id:6,type:'s',   x:1,y:3,w:1,h:1,label:''},
+      {id:7,type:'s',   x:2,y:3,w:1,h:1,label:''},
+      {id:8,type:'s',   x:1,y:4,w:1,h:1,label:''},
+      {id:9,type:'s',   x:2,y:4,w:1,h:1,label:''},
+    ]
+  },
+  {
+    name:'むずかしい',
+    pieces:[
+      {id:0,type:'big', x:1,y:0,w:2,h:2,label:'娘'},
+      {id:1,type:'v',   x:0,y:0,w:1,h:2,label:''},
+      {id:2,type:'v',   x:3,y:0,w:1,h:2,label:''},
+      {id:3,type:'h',   x:1,y:2,w:2,h:1,label:''},
+      {id:4,type:'h',   x:0,y:3,w:2,h:1,label:''},
+      {id:5,type:'h',   x:2,y:3,w:2,h:1,label:''},
+      {id:6,type:'v',   x:0,y:2,w:1,h:1,label:''},
+      {id:7,type:'v',   x:3,y:2,w:1,h:1,label:''},
+      {id:8,type:'s',   x:1,y:4,w:1,h:1,label:''},
+      {id:9,type:'s',   x:2,y:4,w:1,h:1,label:''},
+    ]
+  },
+  {
+    name:'超難問',
+    pieces:[
+      {id:0,type:'big', x:1,y:0,w:2,h:2,label:'娘'},
+      {id:1,type:'v',   x:0,y:0,w:1,h:3,label:''},
+      {id:2,type:'v',   x:3,y:0,w:1,h:3,label:''},
+      {id:3,type:'h',   x:1,y:2,w:2,h:1,label:''},
+      {id:4,type:'v',   x:0,y:3,w:1,h:2,label:''},
+      {id:5,type:'v',   x:3,y:3,w:1,h:2,label:''},
+      {id:6,type:'h',   x:1,y:3,w:2,h:1,label:''},
+      {id:7,type:'s',   x:1,y:4,w:1,h:1,label:''},
+      {id:8,type:'s',   x:2,y:4,w:1,h:1,label:''},
+    ]
+  }
+];
+
+let hkPuzzleIdx=0, hkPieces=[], hkMoves=0, hkWon=false, hkHistory=[];
+const COLS=4, ROWS=5;
+let CELL=64; // px, computed
+
+function startHakoiri(){show('hakoiri-screen');buildHkSelect();hkLoad(0);}
+
+function buildHkSelect(){
+  const wrap=document.getElementById('hk-select');
+  wrap.innerHTML='';
+  hkPuzzles.forEach((p,i)=>{
+    const b=document.createElement('button');
+    b.className='hk-sel-btn'+(i===0?' active':'');
+    b.textContent=p.name;
+    b.onclick=()=>hkLoad(i);
+    wrap.appendChild(b);
+  });
+}
+
+function hkLoad(idx){
+  hkPuzzleIdx=idx;
+  document.querySelectorAll('.hk-sel-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  hkWon=false;
+  document.getElementById('hk-win').style.display='none';
+  document.getElementById('hk-status').textContent='';
+  hkMoves=0;hkHistory=[];
+  // deep copy
+  hkPieces=hkPuzzles[idx].pieces.map(p=>({...p}));
+  hkUpdateMoves();hkComputeCell();hkRender();
+}
+
+function hkReset(){hkLoad(hkPuzzleIdx);}
+
+function hkUndo(){
+  if(hkHistory.length===0)return;
+  hkPieces=hkHistory.pop().map(p=>({...p}));
+  hkMoves=Math.max(0,hkMoves-1);
+  hkWon=false;
+  document.getElementById('hk-win').style.display='none';
+  document.getElementById('hk-status').textContent='';
+  hkUpdateMoves();hkRender();
+}
+
+function hkComputeCell(){
+  const vw=window.innerWidth;
+  const availW=Math.min(vw-48, 320);
+  CELL=Math.floor(availW/COLS);
+}
+
+function hkUpdateMoves(){document.getElementById('hk-moves').textContent=hkMoves;}
+
+// Grid occupancy
+function hkGrid(pieces){
+  const g=Array.from({length:ROWS},()=>Array(COLS).fill(-1));
+  pieces.forEach(p=>{
+    for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++){
+      if(p.y+dy<ROWS&&p.x+dx<COLS)g[p.y+dy][p.x+dx]=p.id;
+    }
+  });
+  return g;
+}
+
+function hkCanMove(pieces,id,dx,dy){
+  const p=pieces.find(pp=>pp.id===id);
+  const g=hkGrid(pieces);
+  const nx=p.x+dx,ny=p.y+dy;
+  if(nx<0||ny<0||nx+p.w>COLS||ny+p.h>ROWS)return false;
+  for(let dy2=0;dy2<p.h;dy2++)for(let dx2=0;dx2<p.w;dx2++){
+    const gx=nx+dx2,gy=ny+dy2;
+    if(g[gy][gx]!==-1&&g[gy][gx]!==id)return false;
+  }
+  return true;
+}
+
+// Drag state
+let hkDrag=null; // {id, startX, startY, pieceX, pieceY, el}
+
+function hkRender(){
+  const boardEl=document.getElementById('hk-board');
+  const exitEl=document.getElementById('hk-exit');
+  const W=CELL*COLS, H=CELL*ROWS;
+  boardEl.style.width=W+'px';boardEl.style.height=H+'px';
+  // exit gap at right side, rows 3-4
+  exitEl.style.width='6px';
+  exitEl.style.height=(CELL*2)+'px';
+  exitEl.style.top=(CELL*3)+'px';
+  exitEl.style.right='-3px';
+
+  boardEl.innerHTML='';
+  hkPieces.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='hk-piece hk-'+p.type;
+    el.style.left=(p.x*CELL+2)+'px';
+    el.style.top=(p.y*CELL+2)+'px';
+    el.style.width=(p.w*CELL-4)+'px';
+    el.style.height=(p.h*CELL-4)+'px';
+    el.style.fontSize=Math.floor(CELL*0.32)+'px';
+    if(p.label)el.textContent=p.label;
+    el.dataset.id=p.id;
+
+    // Pointer events
+    el.addEventListener('pointerdown',e=>{
+      if(hkWon)return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      hkDrag={id:p.id,startX:e.clientX,startY:e.clientY,pieceX:p.x,pieceY:p.y,moved:false,piece:p};
+      el.classList.add('selected');
+    },{passive:false});
+
+    el.addEventListener('pointermove',e=>{
+      if(!hkDrag||hkDrag.id!==p.id)return;
+      e.preventDefault();
+      const ddx=e.clientX-hkDrag.startX;
+      const ddy=e.clientY-hkDrag.startY;
+      const steps=Math.round;
+      let cdx=steps(ddx/CELL),cdy=steps(ddy/CELL);
+      // Constrain: big & v = vertical only? No, all pieces can move in their free direction
+      // Actually all pieces move in any direction they have space
+      // clamp to max 1 step per event for smoothness
+      if(Math.abs(cdx)>Math.abs(cdy)){cdy=0;cdx=Math.sign(cdx)*Math.min(Math.abs(cdx),COLS);}
+      else{cdx=0;cdy=Math.sign(cdy)*Math.min(Math.abs(cdy),ROWS);}
+      if(cdx===0&&cdy===0)return;
+      // slide as many as possible
+      let actualDx=0,actualDy=0;
+      const sign=(v)=>v===0?0:v>0?1:-1;
+      for(let step=0;step<Math.max(Math.abs(cdx),Math.abs(cdy));step++){
+        const sx=sign(cdx-actualDx),sy=sign(cdy-actualDy);
+        if(sx===0&&sy===0)break;
+        if(hkCanMove(hkPieces,p.id,actualDx+sx,actualDy+sy)){actualDx+=sx;actualDy+=sy;}
+        else break;
+      }
+      if(actualDx!==0||actualDy!==0){
+        hkHistory.push(hkPieces.map(pp=>({...pp})));
+        const mp=hkPieces.find(pp=>pp.id===p.id);
+        mp.x+=actualDx;mp.y+=actualDy;
+        hkDrag.startX+=actualDx*CELL;hkDrag.startY+=actualDy*CELL;
+        hkDrag.moved=true;
+        hkMoves++;hkUpdateMoves();
+        hkRender();
+        hkCheckWin();
+      }
+    },{passive:false});
+
+    el.addEventListener('pointerup',e=>{
+      if(!hkDrag||hkDrag.id!==p.id)return;
+      el.classList.remove('selected');
+      hkDrag=null;
+    });
+    el.addEventListener('pointercancel',e=>{
+      if(hkDrag&&hkDrag.id===p.id){el.classList.remove('selected');hkDrag=null;}
+    });
+
+    boardEl.appendChild(el);
+  });
+}
+
+function hkCheckWin(){
+  const big=hkPieces.find(p=>p.type==='big');
+  // Win: big piece reaches x=1, y=3 (bottom center exit)
+  if(big&&big.x===1&&big.y===3){
+    hkWon=true;
+    document.getElementById('hk-win').style.display='inline';
+    const isNew=setBest('best-hk-'+hkPuzzleIdx,hkMoves);
+    document.getElementById('hk-status').textContent=`${hkMoves}手${isNew?' ★ベスト更新！':''}`;
+  }
+}
+
+// Init
+updateBestLabels();
+window.addEventListener('resize',()=>{
+  if(document.getElementById('hakoiri-screen').classList.contains('active')){hkComputeCell();hkRender();}
+});
 </script>
 </body>
 </html>
