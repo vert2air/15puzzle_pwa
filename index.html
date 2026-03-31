@@ -24,6 +24,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--muted);font-family:inherit;font-size:.65rem;cursor:pointer;transition:color .15s}
 .tab.active{color:var(--accent)}
 .tab-icon{font-size:1.3rem;line-height:1}
+#version{position:fixed;top:6px;right:10px;font-size:.6rem;color:var(--muted);z-index:200;pointer-events:none;letter-spacing:.03em}
 .stats{display:flex;gap:2rem}
 .stat{display:flex;flex-direction:column;align-items:center;gap:2px}
 .stat-val{font-size:1.3rem;font-weight:600;font-variant-numeric:tabular-nums}
@@ -35,12 +36,11 @@ button.primary{padding:.55rem 1.2rem;border-radius:8px;border:1.5px solid var(--
 button.primary:active{transform:scale(.95)}
 button.secondary{padding:.55rem 1.2rem;border-radius:8px;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--text);font-size:.85rem;font-family:inherit;cursor:pointer;transition:transform .08s}
 button.secondary:active{transform:scale(.95)}
-#p15-board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:min(300px,calc(100vw - 3rem))}
-.p15-tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.4rem);font-weight:600;cursor:pointer;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--text);transition:transform .08s;user-select:none;-webkit-user-select:none}
-.p15-tile:active{transform:scale(.91)}
+#p15-board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:min(300px,calc(100vw - 3rem));touch-action:none}
+.p15-tile{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.4rem);font-weight:600;cursor:pointer;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--text);user-select:none;-webkit-user-select:none;touch-action:none;transition:filter .1s}
 .p15-tile.empty{background:transparent;border:1.5px dashed rgba(255,255,255,.08);cursor:default;pointer-events:none}
 .p15-tile.correct{background:var(--win-bg);border-color:var(--win-b);color:var(--win)}
-.p15-tile.dragging{transform:scale(.91);filter:brightness(1.3)}
+.p15-tile.dragging{filter:brightness(1.35)}
 .hk-select{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;max-width:340px}
 .hk-sel-btn{padding:.35rem .8rem;border-radius:20px;border:1.5px solid var(--tile-b);background:var(--tile);color:var(--muted);font-size:.75rem;font-family:inherit;cursor:pointer;transition:.1s}
 .hk-sel-btn.active{border-color:var(--win);color:var(--win);background:var(--win-bg)}
@@ -57,6 +57,8 @@ button.secondary:active{transform:scale(.95)}
 </style>
 </head>
 <body>
+
+<div id="version">v1.6</div>
 
 <div id="tab-bar">
   <button class="tab active" id="tab-p15" onclick="switchTab('p15')">
@@ -76,7 +78,7 @@ button.secondary:active{transform:scale(.95)}
     <div class="stat"><span class="stat-val" id="p15-best-val" style="font-size:1rem;color:var(--win)">-</span><span class="stat-lbl">ベスト</span></div>
   </div>
   <div id="p15-board"></div>
-  <div class="msg"><span class="win-msg" id="p15-win">🎉 クリア！ </span><span id="p15-status"></span></div>
+  <div class="msg"><span class="win-msg" id="p15-win">&#x1F389; クリア！ </span><span id="p15-status"></span></div>
   <div class="btns">
     <button class="primary" onclick="p15Shuffle()">シャッフル</button>
     <button class="secondary" onclick="p15Reset()">リセット</button>
@@ -94,7 +96,7 @@ button.secondary:active{transform:scale(.95)}
     <div id="hk-board"></div>
     <div id="hk-exit"></div>
   </div>
-  <div class="msg"><span class="win-msg" id="hk-win">🎉 クリア！ </span><span id="hk-status"></span></div>
+  <div class="msg"><span class="win-msg" id="hk-win">&#x1F389; クリア！ </span><span id="hk-status"></span></div>
   <div class="btns">
     <button class="primary" onclick="hkReset()">リセット</button>
     <button class="secondary" onclick="hkUndo()">元に戻す</button>
@@ -112,11 +114,11 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(name==='p15'?'p15-screen':'hakoiri-screen').classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='hk'){hkComputeCell();hkRender();refreshBestLabels();}
-  else{refreshBestLabels();}
+  if(name==='hk'){hkComputeCell();hkRender();}
+  refreshBestLabels();
 }
 
-function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function getBest(k){return localStorage.getItem(k)||null;}
 function setBest(k,v){const b=getBest(k);if(!b||v<parseInt(b)){localStorage.setItem(k,v);return true;}return false;}
 function refreshBestLabels(){
@@ -126,7 +128,7 @@ function refreshBestLabels(){
   document.getElementById('hk-best-val').textContent=bh?bh+'手':'-';
 }
 
-// 15 PUZZLE
+// ===== 15パズル =====
 let p15tiles=[],p15moves=0,p15sec=0,p15timer=null,p15started=false,p15won=false;
 const p15goal=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
 function p15Solvable(a){let inv=0,pos=0;for(let i=0;i<16;i++){if(a[i]===0){pos=Math.floor(i/4);continue;}for(let j=i+1;j<16;j++)if(a[j]&&a[j]<a[i])inv++;}return((3-pos)%2===0)?inv%2===0:inv%2!==0;}
@@ -147,11 +149,13 @@ function p15Move(i){
   if(!p15started){p15started=true;p15timer=setInterval(()=>{p15sec++;p15Update();},1000);}
   [p15tiles[i],p15tiles[bl]]=[p15tiles[bl],p15tiles[i]];
   p15moves++;p15Update();p15Render();
-  if(p15IsGoal(p15tiles)){p15won=true;clearInterval(p15timer);p15timer=null;
+  if(p15IsGoal(p15tiles)){
+    p15won=true;clearInterval(p15timer);p15timer=null;
     document.getElementById('p15-win').style.display='inline';
     const n=setBest('best-p15',p15moves);
-    document.getElementById('p15-status').textContent=`${p15moves}手 / ${fmt(p15sec)}${n?' ★ベスト更新！':''}`;
-    refreshBestLabels();}
+    document.getElementById('p15-status').textContent=p15moves+'手 / '+fmt(p15sec)+(n?' ★ベスト更新！':'');
+    refreshBestLabels();
+  }
   return true;
 }
 function p15Update(){document.getElementById('p15-moves').textContent=p15moves;document.getElementById('p15-time').textContent=fmt(p15sec);}
@@ -160,52 +164,42 @@ let p15Drag=null;
 function p15Render(){
   const board=document.getElementById('p15-board');
   board.innerHTML='';
-  const CELL=board.getBoundingClientRect().width/4||75;
+  const boardW=board.getBoundingClientRect().width||Math.min(300,window.innerWidth-48);
+  const CELL=boardW/4;
+  const bl=p15tiles.indexOf(0);
+  const br=Math.floor(bl/4),bc=bl%4;
   p15tiles.forEach((v,i)=>{
     const d=document.createElement('div');
+    const row=Math.floor(i/4),col=i%4;
+    const sameRow=(row===br),sameCol=(col===bc);
+    const movable=v!==0&&(sameRow||sameCol);
     d.className='p15-tile'+(v===0?' empty':'')+(v&&v===p15goal[i]?' correct':'');
     if(v)d.textContent=v;
-    if(v){
-      const row=Math.floor(i/4),col=i%4;
-      const bl=p15tiles.indexOf(0);
-      const br=Math.floor(bl/4),bc=bl%4;
-      const sameRow=row===br,sameCol=col===bc;
-      const movable=sameRow||sameCol;
-
-      d.addEventListener('pointerdown',e=>{
-        if(p15won||!movable)return;
-        e.preventDefault();
+    if(movable){
+      d.addEventListener('pointerdown',function(e){
+        if(p15won)return;
+        e.preventDefault();e.stopPropagation();
         d.setPointerCapture(e.pointerId);
-        p15Drag={idx:i,startX:e.clientX,startY:e.clientY,moved:false,row,col,br,bc,sameRow,sameCol};
+        p15Drag={idx:i,startX:e.clientX,startY:e.clientY,row:row,col:col,br:br,bc:bc,sameRow:sameRow,sameCol:sameCol,CELL:CELL,triggered:false};
         d.classList.add('dragging');
       },{passive:false});
-
-      d.addEventListener('pointermove',e=>{
-        if(!p15Drag||p15Drag.idx!==i)return;
+      d.addEventListener('pointermove',function(e){
+        if(!p15Drag||p15Drag.idx!==i||p15Drag.triggered)return;
         e.preventDefault();
-        const dx=e.clientX-p15Drag.startX,dy=e.clientY-p15Drag.startY;
-        // Determine drag axis and direction toward blank
-        let moved=false;
-        if(p15Drag.sameRow){
-          const dir=p15Drag.bc>p15Drag.col?1:-1;
-          if(dx*dir>CELL*0.35){moved=true;}
-        } else {
-          const dir=p15Drag.br>p15Drag.row?1:-1;
-          if(dy*dir>CELL*0.35){moved=true;}
-        }
-        if(moved&&!p15Drag.moved){
-          p15Drag.moved=true;
-          p15Move(i);
-        }
+        var dx=e.clientX-p15Drag.startX, dy=e.clientY-p15Drag.startY;
+        var thr=p15Drag.CELL*0.28, fire=false;
+        if(p15Drag.sameRow){var dir=p15Drag.bc>p15Drag.col?1:-1;if(dx*dir>thr)fire=true;}
+        else{var dir2=p15Drag.br>p15Drag.row?1:-1;if(dy*dir2>thr)fire=true;}
+        if(fire){p15Drag.triggered=true;p15Move(i);}
       },{passive:false});
-
-      d.addEventListener('pointerup',e=>{
+      d.addEventListener('pointerup',function(e){
         if(!p15Drag||p15Drag.idx!==i)return;
         d.classList.remove('dragging');
-        if(!p15Drag.moved)p15Move(i);
+        var dx=Math.abs(e.clientX-p15Drag.startX),dy=Math.abs(e.clientY-p15Drag.startY);
+        if(!p15Drag.triggered&&dx<12&&dy<12)p15Move(i);
         p15Drag=null;
       });
-      d.addEventListener('pointercancel',e=>{
+      d.addEventListener('pointercancel',function(){
         if(p15Drag&&p15Drag.idx===i){d.classList.remove('dragging');p15Drag=null;}
       });
     }
@@ -213,7 +207,7 @@ function p15Render(){
   });
 }
 
-// HAKOIRI
+// ===== 箱入り娘 =====
 const hkPuzzles=[
   {name:'標準',pieces:[
     {id:0,type:'big',x:1,y:0,w:2,h:2,label:'娘'},{id:1,type:'v',x:0,y:0,w:1,h:2,label:''},{id:2,type:'v',x:3,y:0,w:1,h:2,label:''},
@@ -233,92 +227,92 @@ const hkPuzzles=[
 ];
 let hkPuzzleIdx=0,hkPieces=[],hkMoves=0,hkWon=false,hkHistory=[];
 const COLS=4,ROWS=5;let CELL=64;
-
 function buildHkSelect(){
-  const w=document.getElementById('hk-select');w.innerHTML='';
-  hkPuzzles.forEach((p,i)=>{
-    const b=document.createElement('button');b.className='hk-sel-btn'+(i===hkPuzzleIdx?' active':'');
-    b.textContent=p.name;b.onclick=()=>hkLoad(i);w.appendChild(b);
+  var w=document.getElementById('hk-select');w.innerHTML='';
+  hkPuzzles.forEach(function(p,i){
+    var b=document.createElement('button');b.className='hk-sel-btn'+(i===hkPuzzleIdx?' active':'');
+    b.textContent=p.name;b.onclick=function(){hkLoad(i);};w.appendChild(b);
   });
 }
 function hkLoad(idx){
   hkPuzzleIdx=idx;
-  document.querySelectorAll('.hk-sel-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.hk-sel-btn').forEach(function(b,i){b.classList.toggle('active',i===idx);});
   hkWon=false;document.getElementById('hk-win').style.display='none';document.getElementById('hk-status').textContent='';
-  hkMoves=0;hkHistory=[];hkPieces=hkPuzzles[idx].pieces.map(p=>({...p}));
+  hkMoves=0;hkHistory=[];hkPieces=hkPuzzles[idx].pieces.map(function(p){return Object.assign({},p);});
   hkUpdateMoves();hkComputeCell();hkRender();refreshBestLabels();
 }
 function hkReset(){hkLoad(hkPuzzleIdx);}
 function hkUndo(){
   if(!hkHistory.length)return;
-  hkPieces=hkHistory.pop().map(p=>({...p}));hkMoves=Math.max(0,hkMoves-1);
+  hkPieces=hkHistory.pop().map(function(p){return Object.assign({},p);});hkMoves=Math.max(0,hkMoves-1);
   hkWon=false;document.getElementById('hk-win').style.display='none';document.getElementById('hk-status').textContent='';
   hkUpdateMoves();hkRender();
 }
 function hkComputeCell(){CELL=Math.floor(Math.min(window.innerWidth-48,320)/COLS);}
 function hkUpdateMoves(){document.getElementById('hk-moves').textContent=hkMoves;}
 function hkGrid(pieces){
-  const g=Array.from({length:ROWS},()=>Array(COLS).fill(-1));
-  pieces.forEach(p=>{for(let dy=0;dy<p.h;dy++)for(let dx=0;dx<p.w;dx++)if(p.y+dy<ROWS&&p.x+dx<COLS)g[p.y+dy][p.x+dx]=p.id;});
+  var g=[];for(var r=0;r<ROWS;r++){g.push([]);for(var c=0;c<COLS;c++)g[r].push(-1);}
+  pieces.forEach(function(p){for(var dy=0;dy<p.h;dy++)for(var dx=0;dx<p.w;dx++)if(p.y+dy<ROWS&&p.x+dx<COLS)g[p.y+dy][p.x+dx]=p.id;});
   return g;
 }
 function hkCanMove(pieces,id,dx,dy){
-  const p=pieces.find(pp=>pp.id===id),g=hkGrid(pieces),nx=p.x+dx,ny=p.y+dy;
+  var p=null;pieces.forEach(function(pp){if(pp.id===id)p=pp;});
+  var g=hkGrid(pieces),nx=p.x+dx,ny=p.y+dy;
   if(nx<0||ny<0||nx+p.w>COLS||ny+p.h>ROWS)return false;
-  for(let dy2=0;dy2<p.h;dy2++)for(let dx2=0;dx2<p.w;dx2++){const c=g[ny+dy2][nx+dx2];if(c!==-1&&c!==id)return false;}
+  for(var dy2=0;dy2<p.h;dy2++)for(var dx2=0;dx2<p.w;dx2++){var c=g[ny+dy2][nx+dx2];if(c!==-1&&c!==id)return false;}
   return true;
 }
-let hkDrag=null;
+var hkDrag=null;
 function hkRender(){
-  const be=document.getElementById('hk-board'),ee=document.getElementById('hk-exit');
+  var be=document.getElementById('hk-board'),ee=document.getElementById('hk-exit');
   be.style.width=CELL*COLS+'px';be.style.height=CELL*ROWS+'px';
-  ee.style.cssText=`width:6px;height:${CELL*2}px;top:${CELL*3}px;right:-3px;position:absolute;border-top:3px solid var(--bg);border-bottom:3px solid var(--bg);background:var(--bg)`;
+  ee.style.cssText='width:6px;height:'+CELL*2+'px;top:'+CELL*3+'px;right:-3px;position:absolute;border-top:3px solid var(--bg);border-bottom:3px solid var(--bg);background:var(--bg)';
   be.innerHTML='';
-  hkPieces.forEach(p=>{
-    const el=document.createElement('div');
+  hkPieces.forEach(function(p){
+    var el=document.createElement('div');
     el.className='hk-piece hk-'+p.type;
-    el.style.cssText=`left:${p.x*CELL+2}px;top:${p.y*CELL+2}px;width:${p.w*CELL-4}px;height:${p.h*CELL-4}px;font-size:${Math.floor(CELL*.32)}px`;
+    el.style.cssText='left:'+(p.x*CELL+2)+'px;top:'+(p.y*CELL+2)+'px;width:'+(p.w*CELL-4)+'px;height:'+(p.h*CELL-4)+'px;font-size:'+Math.floor(CELL*.32)+'px';
     if(p.label)el.textContent=p.label;
-    el.addEventListener('pointerdown',e=>{
+    el.addEventListener('pointerdown',function(e){
       if(hkWon)return;e.preventDefault();el.setPointerCapture(e.pointerId);
       hkDrag={id:p.id,sx:e.clientX,sy:e.clientY};el.classList.add('selected');
     },{passive:false});
-    el.addEventListener('pointermove',e=>{
+    el.addEventListener('pointermove',function(e){
       if(!hkDrag||hkDrag.id!==p.id)return;e.preventDefault();
-      let cdx=Math.round((e.clientX-hkDrag.sx)/CELL),cdy=Math.round((e.clientY-hkDrag.sy)/CELL);
+      var cdx=Math.round((e.clientX-hkDrag.sx)/CELL),cdy=Math.round((e.clientY-hkDrag.sy)/CELL);
       if(Math.abs(cdx)>=Math.abs(cdy))cdy=0;else cdx=0;
       if(!cdx&&!cdy)return;
-      let ax=0,ay=0;const sg=v=>v>0?1:v<0?-1:0;
-      for(let s=0;s<Math.max(Math.abs(cdx),Math.abs(cdy));s++){
-        const sx=sg(cdx-ax),sy=sg(cdy-ay);if(!sx&&!sy)break;
+      var ax=0,ay=0;
+      var sg=function(v){return v>0?1:v<0?-1:0;};
+      for(var s=0;s<Math.max(Math.abs(cdx),Math.abs(cdy));s++){
+        var sx=sg(cdx-ax),sy=sg(cdy-ay);if(!sx&&!sy)break;
         if(hkCanMove(hkPieces,p.id,ax+sx,ay+sy)){ax+=sx;ay+=sy;}else break;
       }
       if(ax||ay){
-        hkHistory.push(hkPieces.map(pp=>({...pp})));
-        const mp=hkPieces.find(pp=>pp.id===p.id);mp.x+=ax;mp.y+=ay;
+        hkHistory.push(hkPieces.map(function(pp){return Object.assign({},pp);}));
+        var mp=null;hkPieces.forEach(function(pp){if(pp.id===p.id)mp=pp;});mp.x+=ax;mp.y+=ay;
         hkDrag.sx+=ax*CELL;hkDrag.sy+=ay*CELL;
         hkMoves++;hkUpdateMoves();hkRender();hkCheckWin();
       }
     },{passive:false});
-    el.addEventListener('pointerup',()=>{if(hkDrag&&hkDrag.id===p.id){el.classList.remove('selected');hkDrag=null;}});
-    el.addEventListener('pointercancel',()=>{if(hkDrag&&hkDrag.id===p.id){el.classList.remove('selected');hkDrag=null;}});
+    el.addEventListener('pointerup',function(){if(hkDrag&&hkDrag.id===p.id){el.classList.remove('selected');hkDrag=null;}});
+    el.addEventListener('pointercancel',function(){if(hkDrag&&hkDrag.id===p.id){el.classList.remove('selected');hkDrag=null;}});
     be.appendChild(el);
   });
 }
 function hkCheckWin(){
-  const big=hkPieces.find(p=>p.type==='big');
+  var big=null;hkPieces.forEach(function(p){if(p.type==='big')big=p;});
   if(big&&big.x===1&&big.y===3){
     hkWon=true;document.getElementById('hk-win').style.display='inline';
-    const n=setBest('best-hk-'+hkPuzzleIdx,hkMoves);
-    document.getElementById('hk-status').textContent=`${hkMoves}手${n?' ★ベスト更新！':''}`;
+    var n=setBest('best-hk-'+hkPuzzleIdx,hkMoves);
+    document.getElementById('hk-status').textContent=hkMoves+'手'+(n?' ★ベスト更新！':'');
     refreshBestLabels();
   }
 }
-
-window.addEventListener('resize',()=>{
+window.addEventListener('resize',function(){
   if(document.getElementById('hakoiri-screen').classList.contains('active')){hkComputeCell();hkRender();}
 });
-buildHkSelect();hkComputeCell();hkPieces=hkPuzzles[0].pieces.map(p=>({...p}));
+buildHkSelect();hkComputeCell();hkPieces=hkPuzzles[0].pieces.map(function(p){return Object.assign({},p);});
 p15Shuffle();refreshBestLabels();
 </script>
 </body>
